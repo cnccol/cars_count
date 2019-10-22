@@ -17,15 +17,15 @@ from preprocess import prep_image, inp_to_image, letterbox_image
 from similarity.normalized_levenshtein import NormalizedLevenshtein
 from openalpr import Alpr
 
-see = False
+see = True
 write_video = False
 save = True
-use_alpr = False
+use_alpr = True
 debug = False
-write_imgs = False
+write_imgs = True
 
 cwd = os.getcwd() #global
-peaje = "Gualanday"
+peaje = "Koran"
 
 #############################################################################
 def create_dirs(input_video_, cwd_=cwd, peaje_=peaje):
@@ -115,10 +115,7 @@ if write_video:
 frame_fraction = 0.05 #area multiplier
 font = cv2.FONT_HERSHEY_DUPLEX #font for cv2
 
-# results dictionary structure
-results = {"frame_number":[], "vehicle_type":[], "yolo_rect_area":[], 
-           "yolo_centroid":[], "b_mean":[], "g_mean":[], "r_mean":[], 
-           "yolo_confidence":[], "plate":[], "plate_confidence":[]}
+# results
 
 # load yolo
 CUDA = torch.cuda.is_available()
@@ -137,7 +134,7 @@ if CUDA:
         
 # list of videos to process
 video_list = sorted(os.listdir(cwd+"/videos/converted/"+peaje))
-begin, end = 4, len(video_list)
+begin, end = 0, len(video_list)
 print("    ")
 print("--- Will process "+str(len(video_list[begin:end]))+" videos")
 
@@ -146,6 +143,11 @@ for input_video in video_list[begin:end]:
     
 for input_video in video_list[begin:end]:
     tic = time.time()
+
+    # results dictionary structure
+    results = {"frame_number":[], "vehicle_type":[], "yolo_rect_area":[], 
+               "yolo_centroid":[], "b_mean":[], "g_mean":[], "r_mean":[], 
+               "yolo_confidence":[], "plate":[], "plate_confidence":[]}
 
     # video input format
     vid_format = input_video[-4:]
@@ -181,10 +183,10 @@ for input_video in video_list[begin:end]:
                         (255,255,255), 1)
 
         # for region of interest (roi)
-        xroi_m = int(480)
+        xroi_m = int(0)
         xroi_M = int(1000) #frame.shape[1]
         yroi_m = int(0)
-        yroi_M = int(590) #frame.shape[0]
+        yroi_M = int(frame.shape[0]) #frame.shape[0]
         roi_frame = frame[yroi_m:yroi_M, xroi_m:xroi_M]
         if see:
             cv2.rectangle(frame, (xroi_m, yroi_m), (xroi_M, yroi_M), 
@@ -248,7 +250,11 @@ for input_video in video_list[begin:end]:
                 results["g_mean"].append(g_mean)
                 results["r_mean"].append(r_mean)
             
-
+                if write_imgs:
+                    small_frame_w = imutils.resize(frame, height=H_resize)
+                    cv2.imwrite(cwd+"/output/imgs/"+peaje+"/"+input_video+"/"+str(frame_number)+".jpg",
+                                small_frame_w)
+                
                 if use_alpr:
                     alpr_results = alpr.recognize_ndarray(frame[max(vtop-20,0):min(vbottom+20,frame.shape[0]), 
                                                                 max(vleft-20,0):min(vright+20,frame.shape[1])]
@@ -287,11 +293,6 @@ for input_video in video_list[begin:end]:
             key = cv2.waitKey(1) & 0xFF
             if key == ord("q"):
                 break
-
-        if write_imgs:
-            small_frame = imutils.resize(frame, height=H_resize)
-            cv2.imwrite(cwd+"/output/imgs/"+peaje+"/"+input_video+"/"+str(frame_number)+".jpg",
-                        small_frame)
             
         frame_number += 1
         
@@ -314,6 +315,7 @@ for input_video in video_list[begin:end]:
 if write_video:
     out.release()
 
-if alpr:
-    alpr.unload()
-    print("--- OPENALPR UNLOADED" )
+if use_alpr:
+    if alpr:
+        alpr.unload()
+        print("--- OPENALPR UNLOADED" )
