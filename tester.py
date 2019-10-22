@@ -6,7 +6,7 @@ test_expected_results = pd.read_csv(".csv")
 
 FRAMES = list(test_expected_results['frame_number'])
 VEHICLE_TYPES = list(test_expected_results['vehicle_type'])
-# vehicle_number = test_expected_results['vehicle_number']
+VEHICLE_NUMBERS = list(test_expected_results['vehicle_number'])
 CARS = 0
 
 for x in list(VEHICLE_TYPES):
@@ -23,14 +23,15 @@ def test():
     frames_with_false_negatives = []
     results = counter.get_cars()
     for i in range(len(results)):
-        if results[i]['vehicle_type'] == 'car':
-            if VEHICLE_TYPES[i] == 'car':
-                counted_cars += 1
+        if results[i]['vehicle_number'] == VEHICLE_NUMBERS[i]:
+            if results[i]['vehicle_type'] == 'car':
+                if VEHICLE_TYPES[i] == 'car':
+                    counted_cars += 1
+                else:
+                    frames_with_false_positives.append(FRAMES[i])
             else:
-                frames_with_false_positives.append(FRAMES[i])
-        else:
-            if VEHICLE_TYPES[i] == 'car':
-                frames_with_false_negatives.append(FRAMES[i])
+                if VEHICLE_TYPES[i] == 'car':
+                    frames_with_false_negatives.append(FRAMES[i])
     
     print("---------------------- Results ----------------------")
     print("Accuracy: {}".format(float(counted_cars)/float(CARS)))
