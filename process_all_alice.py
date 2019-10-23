@@ -18,11 +18,12 @@ from similarity.normalized_levenshtein import NormalizedLevenshtein
 from openalpr import Alpr
 
 see = True
+draw = False
 write_video = False
-save = True
-use_alpr = True
+save = False
+use_alpr = False
 debug = False
-write_imgs = True
+write_imgs = False
 
 cwd = os.getcwd() #global
 peaje = "Koran"
@@ -178,7 +179,7 @@ for input_video in video_list[begin:end]:
         if not ret:
             break
 
-        if see:
+        if draw:
             cv2.putText(frame, str(frame_number), (15,60), font, 1.0, 
                         (255,255,255), 1)
 
@@ -188,7 +189,7 @@ for input_video in video_list[begin:end]:
         yroi_m = int(0)
         yroi_M = int(frame.shape[0]) #frame.shape[0]
         roi_frame = frame[yroi_m:yroi_M, xroi_m:xroi_M]
-        if see:
+        if draw:
             cv2.rectangle(frame, (xroi_m, yroi_m), (xroi_M, yroi_M), 
                           (0,0,100), 2, 8)
             if debug:
@@ -233,7 +234,7 @@ for input_video in video_list[begin:end]:
                 vleft, vtop, vright, vbottom = bbox
                 vleft, vtop, vright, vbottom = (vleft.item()+xroi_m, vtop.item()+yroi_m, 
                                                 vright.item()+xroi_m, vbottom.item()+yroi_m)
-                if see:
+                if draw:
                     cv2.rectangle(frame, (vleft, vtop), (vright, vbottom), 
                                 (0,100,0), 2, 8)
                     cv2.putText(frame, label, (vleft,vbottom), font, 1, 
@@ -267,7 +268,7 @@ for input_video in video_list[begin:end]:
                         plate = plate[:3].replace("0","O") + plate[3:]
                         plate_confidence = alpr_results["results"][0]["confidence"]
                         if re.match(r"^[A-Z]{3}[0-9]{3}$", plate):
-                            if see:
+                            if draw:
                                 cv2.putText(frame, "placa: "+plate, (3, 100), font, 1.0, 
                                             (1, 1, 255), 1)
                             results["plate"].append(plate)
