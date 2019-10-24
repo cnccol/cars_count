@@ -135,7 +135,7 @@ if CUDA:
         
 # list of videos to process
 video_list = sorted(os.listdir(cwd+"/videos/converted/"+peaje))
-begin, end = 0, 4
+begin, end = 4, 8
 print("    ")
 print("--- Will process "+str(len(video_list[begin:end]))+" videos")
 
