@@ -17,13 +17,13 @@ from preprocess import prep_image, inp_to_image, letterbox_image
 from similarity.normalized_levenshtein import NormalizedLevenshtein
 from openalpr import Alpr
 
-see = True
-draw = False
+see = False
+draw = True
 write_video = False
 save = False
 use_alpr = False
 debug = False
-write_imgs = False
+write_imgs = True
 
 cwd = os.getcwd() #global
 peaje = "Koran"
@@ -31,12 +31,14 @@ peaje = "Koran"
 #############################################################################
 def create_dirs(input_video_, cwd_=cwd, peaje_=peaje):
     pathlib.Path(cwd_+'/output/imgs/'+peaje_+"/"+input_video_).mkdir(parents=True, 
-                                                                    exist_ok=True)
+                                                                     exist_ok=True)
+    pathlib.Path(cwd_+'/output/imgs/'+peaje_+"/"+input_video_+"_yolo_roi").mkdir(parents=True, 
+                                                      exist_ok=True)
     pathlib.Path(cwd_+'/output/csvs/'+peaje_).mkdir(parents=True, 
-                                                   exist_ok=True)
+                                                    exist_ok=True)
     pathlib.Path(cwd_+'/output/videos/'+peaje_).mkdir(parents=True, 
-                                                     exist_ok=True)
-
+                                                      exist_ok=True)
+    
 def cap_properties(cap_):
     W_ = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     H_ = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
@@ -253,8 +255,10 @@ for input_video in video_list[begin:end]:
             
                 if write_imgs:
                     small_frame_w = imutils.resize(frame, height=H_resize)
-                    cv2.imwrite(cwd+"/output/imgs/"+peaje+"/"+input_video+"/"+str(frame_number)+".jpg",
-                                small_frame_w)
+                    #cv2.imwrite(cwd+"/output/imgs/"+peaje+"/"+input_video+"/"+str(frame_number)+".jpg",
+                    #            small_frame_w)
+                    cv2.imwrite(cwd+"/output/imgs/"+peaje+"/"+input_video+"_yolo_roi"+"/"+str(frame_number)+".jpg",
+                                small_frame_w[vtop:vbottom,vleft:vright])
                 
                 if use_alpr:
                     alpr_results = alpr.recognize_ndarray(frame[max(vtop-20,0):min(vbottom+20,frame.shape[0]), 
