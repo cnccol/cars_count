@@ -2,7 +2,8 @@ import numpy as np
 import pandas as pd
  
 def make_training_dataset(df, windows=[1], label='Numero carro',
-                          drop=['Label', 'plate', 'plate_confidence', 'Talanquera']):
+                          drop=['Label', 'plate', 'plate_confidence', 'Talanquera'],
+                          return_deltas=False):
     """
     Makes the dataset for "different (or same) car classification". Concatenates 
     pairs of rows based on the elements (integers) in windows (list). 
@@ -36,6 +37,22 @@ def make_training_dataset(df, windows=[1], label='Numero carro',
     0  0_1  a1  b1  c1  a2  b2  c2
     1  1_2  a2  b2  c2  a3  b3  c3
     2  2_3  a3  b3  c3  a4  b4  c4
+    >>> df2 = pd.DataFrame({'a': [1,2,3,4],
+    ...                     'b': [5,6,7,8],
+    ...                     'l': [1,2,2,2]})
+    >>> df2
+       a  b  l
+    0  1  5  1
+    1  2  6  2
+    2  3  7  2
+    3  4  8  2
+    >>> make_training_dataset(df2, windows=[1,2], label='l', drop=[], return_deltas=True)
+        ID a_1 b_1 a_2 b_2 delta_a delta_b different_cars
+    0  0_1   1   5   2   6       1       1              1
+    1  0_2   1   5   3   7       2       2              1
+    2  1_2   2   6   3   7       1       1              0
+    3  1_3   2   6   4   8       2       2              0
+
     """
 
     df = df.drop(columns=drop).dropna().reset_index(drop=True)
@@ -52,10 +69,13 @@ def make_training_dataset(df, windows=[1], label='Numero carro',
     X2_cols = [col + '_2' for col in X_cols]
 
     output = []
+
+    output_cols = ['ID'] + X1_cols + X2_cols
+    if return_deltas:
+        delta_cols = ['delta_' + col for col in X_cols]
+        output_cols = output_cols + delta_cols
     if label:
-        output_cols = ['ID'] + X1_cols + X2_cols + ['different_cars']
-    else:
-        output_cols = ['ID'] + X1_cols + X2_cols
+        output_cols = output_cols + ['different_cars']
 
     for i in range(X.shape[0]-max(windows)):
         for window in windows:
@@ -64,12 +84,15 @@ def make_training_dataset(df, windows=[1], label='Numero carro',
             X1 = X[i, :]
             X2 = X[i + window, :]
 
+            new_row = np.concatenate((np.array([ID]), X1, X2))
+
+            if return_deltas:
+                deltas = X2 - X1
+                new_row = np.concatenate((new_row, deltas))
+
             if label:
                 different_cars = int(labels[i] != labels[i + window])
-                new_row = np.concatenate((np.array([ID]), X1, X2, 
-                                          np.array([different_cars])))
-            else:
-                new_row = np.concatenate((np.array([ID]), X1, X2))
+                new_row = np.concatenate((new_row, np.array([different_cars])))
 
             output.append(new_row)
 
